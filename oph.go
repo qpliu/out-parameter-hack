@@ -3,6 +3,7 @@ package oph
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"errors"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 // Queryer can run queries.  Examples include *sql.DB and *sql.Tx.
 type Queryer interface {
 	Query(string, ...interface{}) (*sql.Rows, error)
+	QueryContext(context.Context, string, ...interface{}) (*sql.Rows, error)
 }
 
 // CallString is the SQL that would be sent to the queryer calling the
@@ -39,12 +41,38 @@ func CallString(proc string, params ...interface{}) (string, error) {
 //
 // Parameters of all other types result in error.
 func Call(queryer Queryer, readResultSet func(resultSetIndex int, rows *sql.Rows) error, proc string, params ...interface{}) error {
+	return CallContext(nil, queryer, readResultSet, proc, params...)
+}
+
+// CallContext calls the stored procedure from the queryer with the given
+// parameters.
+//
+// readResultSet is called for each result set returned by the stored
+// procedure.
+//
+// Parameters of types implementing sql.Scanner are passed to the stored
+// procedure as out parameters and scanned after the result sets returned
+// by the stored procedure are read.
+//
+// Parameters with type nil, bool, *bool, int, int8, int16, int32, int64,
+// *int, *int8, *int16, *int32, *int64, uint, uint8, uint16, uint32, uint64,
+// *uint, *uint8, *uint16, *uint32, *uint64, float32, float64, *float32,
+// *float64, string, *string, time.Time, *time.Time are passed to the stored
+// procedure as in parameters.
+//
+// Parameters of all other types result in error.
+func CallContext(ctx context.Context, queryer Queryer, readResultSet func(resultSetIndex int, rows *sql.Rows) error, proc string, params ...interface{}) error {
 	callString, outParams, err := callParameters(proc, params...)
 	if err != nil {
 		return err
 	}
 
-	rows, err := queryer.Query(callString)
+	var rows *sql.Rows
+	if ctx == nil {
+		rows, err = queryer.Query(callString)
+	} else {
+		rows, err = queryer.QueryContext(ctx, callString)
+	}
 	if err != nil {
 		return err
 	}
