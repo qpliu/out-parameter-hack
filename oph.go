@@ -15,13 +15,10 @@ type Queryer interface {
 	Query(string, ...interface{}) (*sql.Rows, error)
 }
 
-// StoredProcedure is the name of a stored procedure.
-type StoredProcedure string
-
 // CallString is the SQL that would be sent to the queryer calling the
 // stored procedure with the given arguments.
-func (sp StoredProcedure) CallString(params ...interface{}) (string, error) {
-	callString, _, err := sp.callParameters(params...)
+func CallString(proc string, params ...interface{}) (string, error) {
+	callString, _, err := callParameters(proc, params...)
 	return callString, err
 }
 
@@ -41,8 +38,8 @@ func (sp StoredProcedure) CallString(params ...interface{}) (string, error) {
 // procedure as in parameters.
 //
 // Parameters of all other types result in error.
-func (sp StoredProcedure) Call(queryer Queryer, readResultSet func(resultSetIndex int, rows *sql.Rows) error, params ...interface{}) error {
-	callString, outParams, err := sp.callParameters(params...)
+func Call(queryer Queryer, readResultSet func(resultSetIndex int, rows *sql.Rows) error, proc string, params ...interface{}) error {
+	callString, outParams, err := callParameters(proc, params...)
 	if err != nil {
 		return err
 	}
@@ -78,12 +75,12 @@ func (sp StoredProcedure) Call(queryer Queryer, readResultSet func(resultSetInde
 	}
 }
 
-func (sp StoredProcedure) callParameters(params ...interface{}) (string, []interface{}, error) {
+func callParameters(proc string, params ...interface{}) (string, []interface{}, error) {
 	var buf bytes.Buffer
 	var outParams []interface{}
 
 	buf.WriteString("CALL ")
-	buf.WriteString(string(sp))
+	buf.WriteString(proc)
 	buf.WriteString("(")
 
 	for i, param := range params {

@@ -15,14 +15,14 @@ drivers.
 
 	// CALL EXAMPLE('example',1,NULL,@outString)
 	var outString sql.NullString
-	if err := oph.StoredProcedure("EXAMPLE").Call(db, func(resultSetIndex int, rows *sql.Rows) error {
+	if err := oph.Call(db, func(resultSetIndex int, rows *sql.Rows) error {
 		for rows.Next() {
 			var id int64
 			var name sql.NullString
 			rows.Scan(&id, &name)
 		}
 		return rows.Err()
-	}, "example", 1, nil, &outString); err != nil {
+	}, "EXAMPLE", "example", 1, nil, &outString); err != nil {
 		panic(err)
 	}
 

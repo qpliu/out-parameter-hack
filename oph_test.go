@@ -8,7 +8,7 @@ import (
 
 func TestCallString(t *testing.T) {
 	var outString sql.NullString
-	str, err := StoredProcedure("TEST").CallString(1, nil, &outString)
+	str, err := CallString("TEST", 1, nil, &outString)
 	if err != nil {
 		t.Errorf("CallString: err=%s", err.Error())
 	}
@@ -19,7 +19,7 @@ func TestCallString(t *testing.T) {
 
 func ExampleCallString() {
 	var outString sql.NullString
-	str, err := StoredProcedure("TEST").CallString("test", 1, nil, &outString)
+	str, err := CallString("TEST", "test", 1, nil, &outString)
 	if err != nil {
 		fmt.Println("ERROR", err.Error())
 	} else {
@@ -29,7 +29,7 @@ func ExampleCallString() {
 }
 
 func ExampleCallStringInjection() {
-	str, err := StoredProcedure("TEST").CallString("test';DROP TABLE USERS")
+	str, err := CallString("TEST", "test';DROP TABLE USERS")
 	if err != nil {
 		fmt.Println("ERROR", err.Error())
 	} else {
