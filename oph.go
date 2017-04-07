@@ -92,8 +92,10 @@ func CallContext(ctx context.Context, queryer Queryer, readResultSet func(result
 			}
 			return rows.Err()
 		}
-		if err := readResultSet(resultSetIndex, rows); err != nil {
-			return err
+		if len(cols) > 0 {
+			if err := readResultSet(resultSetIndex, rows); err != nil {
+				return err
+			}
 		}
 		if rows.NextResultSet() {
 			resultSetIndex++
